@@ -13,7 +13,10 @@ libext2_blkid_src_files := \
 	save.c \
 	tag.c \
 	version.c \
-
+        volume_id/util.c \
+        volume_id/exfat.c \
+        volume_id/volume_id.c \
+        volume_id/xfuncs_printf.c \
 
 libext2_blkid_shared_libraries := libext2_uuid
 
@@ -23,7 +26,8 @@ libext2_blkid_static_libraries := libext2_uuid_static
 
 libext2_blkid_system_static_libraries := libc
 
-libext2_blkid_c_includes := external/e2fsprogs/lib
+libext2_blkid_c_includes := external/e2fsprogs/lib \
+        external/e2fsprogs/lib/blkid/volume_id \
 
 libext2_blkid_cflags := -O2 -g -W -Wall -fno-strict-aliasing \
 	-DHAVE_UNISTD_H \

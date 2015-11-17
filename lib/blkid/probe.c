@@ -1,3 +1,4 @@
+
 /*
  * probe.c - identify a block device by its contents, and return a dev
  *           struct with the details
@@ -35,6 +36,9 @@
 #include "blkidP.h"
 #include "uuid/uuid.h"
 #include "probe.h"
+#include "volume_id_internal.h"
+
+#define NoDebug 1
 
 static int figure_label_len(const unsigned char *label, int len)
 {
@@ -1501,6 +1505,67 @@ static struct blkid_magic type_array[] = {
   {   NULL,	 0,	 0,  0, NULL,			NULL }
 };
 
+int get_label_uuid(int fd, char **label, char **uuid, char **type)
+{
+	int rv = 1;
+	uint64_t size;
+	struct volume_id *vid;
+	/* fd is owned by vid now */
+	vid = volume_id_open_node(fd);
+	if (ioctl(/*vid->*/fd, BLKGETSIZE64, &size) != 0)
+		size = 0;
+	if (volume_id_probe_all(vid, /*0,*/ size) != 0)
+		goto ret;
+	if (vid->label[0] != '\0' || vid->uuid[0] != '\0'
+	    || vid->type != NULL) {
+	        *label = xstrndup(vid->label, sizeof(vid->label));
+	        *uuid  = xstrndup(vid->uuid, sizeof(vid->uuid));
+	        *type  = xstrndup(vid->type, sizeof(vid->type));
+	        rv = 0;
+	}
+ ret:
+        free_volume_id(vid); /* also closes fd */
+        return rv;
+}
+
+int is_valid(char * str)
+{
+	if (!NoDebug)
+		fprintf(stderr, "probe, len:%d\n", strlen(str));
+	if (NULL == str)
+		return 0;
+	if (!strlen(str))
+		return 0;
+	return 1;
+}
+
+int probe_other_fs(blkid_dev dev, char ** type)
+{
+	static char *uuid = NULL; /* for compiler */
+	static char *label = NULL;
+	int fd;
+
+	fd = open(dev->bid_name, O_RDONLY);
+	if (fd < 0)
+		return 0;
+
+        /* get_label_uuid() closes fd in all cases (success & failure) */
+	if (get_label_uuid(fd, &label, &uuid, type) == 0) {
+		if (!is_valid(label) || !is_valid(*type)) {
+			return 0;
+		}
+		if (!NoDebug)
+			fprintf(stderr, "probe, device:%s, label:%s, uuid:%s, type:%s\n", dev->bid_name, label, uuid, *type);
+		blkid_set_tag(dev, "UUID", uuid, 0);
+		blkid_set_tag(dev, "LABEL", label, 0);
+                return 1;
+	} else {
+		* type = NULL;
+	}
+	return 0;
+}
+
+
 /*
  * Verify that the data in dev is consistent with what is on the actual
  * block device (using the devname field only).  Normally this will be
@@ -1604,6 +1669,15 @@ try_again:
 		if ((id->bim_probe == NULL) ||
 		    (id->bim_probe(&probe, id, buf) == 0)) {
 			type = id->bim_type;
+			goto found_type;
+		}
+	}
+	if (!NoDebug)
+		fprintf(stderr, "probe, now out of for, bim_type:%s, bid_type:%s\n", id->bim_type, dev->bid_type);
+	char * tmp_type = NULL;
+	if (!id->bim_type) {
+		if (probe_other_fs(dev, &tmp_type)) {
+			type = tmp_type;
 			goto found_type;
 		}
 	}
