@@ -279,7 +279,8 @@ static void print_tags(blkid_dev dev, char *show[], int numtag, int output)
 			}
 			fputs(type, stdout);
 			fputs("=\"", stdout);
-			safe_print(value, -1);
+			//safe_print(value, -1);
+			fputs(value, stdout);
 			fputs("\" ", stdout);
 		}
 	}
