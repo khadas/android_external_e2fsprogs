@@ -277,6 +277,8 @@ static void print_tags(blkid_dev dev, char *show[], int numtag, int output)
 				printf("%s: ", blkid_dev_devname(dev));
 				first = 0;
 			}
+			if (!strcmp(value, ""))
+			    continue;
 			fputs(type, stdout);
 			fputs("=\"", stdout);
 			//safe_print(value, -1);

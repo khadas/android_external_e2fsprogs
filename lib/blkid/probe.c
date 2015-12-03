@@ -1649,7 +1649,7 @@ int probe_other_fs(blkid_dev dev, char ** type)
 
         /* get_label_uuid() closes fd in all cases (success & failure) */
 	if (get_label_uuid(fd, &label, &uuid, type) == 0) {
-		if (!is_valid(label) || !is_valid(*type)) {
+		if (!is_valid(*type)) {
 			return 0;
 		}
 		if (!NoDebug)
