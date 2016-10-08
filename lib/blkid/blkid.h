@@ -69,6 +69,7 @@ extern int blkid_probe_all(blkid_cache cache);
 extern int blkid_probe_all_new(blkid_cache cache);
 extern blkid_dev blkid_get_dev(blkid_cache cache, const char *devname,
 			       int flags);
+extern blkid_dev add_vold_cache(blkid_cache cache, const char * devname);
 
 /* getsize.c */
 extern blkid_loff_t blkid_get_dev_size(int fd);
