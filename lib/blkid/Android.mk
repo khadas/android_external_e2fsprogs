@@ -32,7 +32,7 @@ libext2_blkid_c_includes := external/e2fsprogs/lib \
         external/e2fsprogs/lib/blkid/volume_id \
 
 libiconv_c_includes := \
-        vendor/amlogic/frameworks/av/LibPlayer/third_parts/libiconv-1.12/include
+        $(TOP)/vendor/amlogic/external/libiconv/include
 
 libext2_blkid_cflags := -O2 -g -W -Wall -fno-strict-aliasing \
 	-DHAVE_UNISTD_H \
