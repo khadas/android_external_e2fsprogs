@@ -663,14 +663,14 @@ static int probe_fat(struct blkid_probe *probe,
 	sprintf(serno, "%02X%02X-%02X%02X", vol_serno[3], vol_serno[2],
 		vol_serno[1], vol_serno[0]);
 
-	char *outbuf = (char *) malloc(64*sizeof(char));
-	int outlen = 63;
-	if (label != 0 && outbuf != NULL) {
+	if (label != 0) {
 		char *inbuf = (char *)label;
+		char outbuf[512] = {0};
 		int inlen = label_len;
+		int outlen = sizeof(outbuf);
 		if (!gbk2utf8(inbuf, &inlen, outbuf, &outlen)) {
 			label = outbuf;
-			label_len = strlen(outbuf);
+			label_len = sizeof(outbuf) - outlen;
 			if (inlen > 0) {
 				printf("Warning: vfat label converted remain character numbers: %d\n", inlen);
 			}
@@ -680,8 +680,6 @@ static int probe_fat(struct blkid_probe *probe,
 	blkid_set_tag(probe->dev, "LABEL", (const char *) label, label_len);
 	blkid_set_tag(probe->dev, "UUID", serno, sizeof(serno)-1);
 
-	if (outbuf != NULL)
-		free(outbuf);
 	return 0;
 }
 
