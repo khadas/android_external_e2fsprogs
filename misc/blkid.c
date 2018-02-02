@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <dirent.h>
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
@@ -39,30 +38,6 @@ extern int optind;
 #include "blkid/blkid.h"
 
 const char *progname = "blkid";
-char device_names [32][256];
-#define BASENAME "/dev/block/vold"
-
-int get_vold_devices() {
-	DIR *dir;
-	struct dirent *ptr;
-	if ((dir = opendir(BASENAME)) == NULL) {
-		fprintf(stderr, "Now opendir err!!!");
-		return 0;
-	}
-	int cnt = 0;
-	while ((ptr = readdir(dir)) != NULL) {
-		//fprintf(stderr, "name:%s, type:%d\n", ptr->d_name, ptr->d_type);
-		if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {    ///current dir OR parrent dir
-			continue;
-		} else if (ptr->d_type == 6) {    ///file
-			snprintf(device_names[cnt], 256, "%s/%s", BASENAME, ptr->d_name);
-			cnt++;
-		} else if(ptr->d_type == 10) {   ///link file
-		}
-	}
-	closedir(dir);
-	return cnt;
-}
 
 static void print_version(FILE *out)
 {
@@ -277,12 +252,9 @@ static void print_tags(blkid_dev dev, char *show[], int numtag, int output)
 				printf("%s: ", blkid_dev_devname(dev));
 				first = 0;
 			}
-			if (!strcmp(value, ""))
-			    continue;
 			fputs(type, stdout);
 			fputs("=\"", stdout);
-			//safe_print(value, -1);
-			fputs(value, stdout);
+			safe_print(value, -1);
 			fputs("\" ", stdout);
 		}
 	}
@@ -418,13 +390,8 @@ int main(int argc, char **argv)
 	} else if (!numdev) {
 		blkid_dev_iterate	iter;
 		blkid_dev		dev;
-		int i;
 
 		blkid_probe_all(cache);
-		int cnt = get_vold_devices();
-		for (i = 0; i < cnt; i++) {
-			add_vold_cache(cache, device_names[i]);
-		}
 
 		iter = blkid_dev_iterate_begin(cache);
 		blkid_dev_set_search(iter, search_type, search_value);

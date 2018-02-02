@@ -39,24 +39,6 @@
 
 #include "blkidP.h"
 
-
-
-blkid_dev add_vold_cache(blkid_cache cache, const char * devname) {
-	blkid_dev dev = NULL;
-	if (access(devname, F_OK) < 0)
-		return NULL;
-	dev = blkid_new_dev();
-	if (!dev)
-		return NULL;
-	dev->bid_time = INT_MIN;
-	dev->bid_name = blkid_strdup(devname);
-	dev->bid_cache = cache;
-	list_add_tail(&dev->bid_devs, &cache->bic_devs);
-	cache->bic_flags |= BLKID_BIC_FL_CHANGED;
-	return dev;
-}
-
-
 /*
  * Find a dev struct in the cache by device name, if available.
  *

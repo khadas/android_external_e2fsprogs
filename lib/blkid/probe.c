@@ -1,4 +1,3 @@
-
 /*
  * probe.c - identify a block device by its contents, and return a dev
  *           struct with the details
@@ -21,7 +20,6 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include <iconv.h>
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -37,43 +35,6 @@
 #include "blkidP.h"
 #include "uuid/uuid.h"
 #include "probe.h"
-#include "volume_id_internal.h"
-
-#define NoDebug 1
-
-static int charset_convert(
-			  char *from_charset, char *to_charset,
-			  char *inbuf, int *inlen, char *outbuf, int *outlen)
-{
-	iconv_t cd;
-	int rc;
-	char **pin = &inbuf;
-	char **pout = &outbuf;
-
-	cd = iconv_open(to_charset, from_charset);
-	if (cd == (iconv_t)(-1)) {
-		printf("failed to iconv open from %s to %s\n",
-			from_charset, to_charset);
-		return -1;
-	}
-
-	memset(outbuf, 0, *outlen);
-
-	if (iconv(cd, pin, inlen, pout, outlen) == (size_t)(-1)) {
-		iconv_close(cd);
-		printf("failed to iconv from %s to %s\n",
-			from_charset, to_charset);
-		return -1;
-	}
-
-	iconv_close(cd);
-	return 0;
-}
-
-int gbk2utf8(char *inbuf, int *inlen, char *outbuf, int *outlen)
-{
-	return charset_convert("gbk","utf-8", inbuf, inlen, outbuf, outlen);
-}
 
 static int figure_label_len(const unsigned char *label, int len)
 {
@@ -663,20 +624,6 @@ static int probe_fat(struct blkid_probe *probe,
 	sprintf(serno, "%02X%02X-%02X%02X", vol_serno[3], vol_serno[2],
 		vol_serno[1], vol_serno[0]);
 
-	if (label != 0) {
-		char *inbuf = (char *)label;
-		char outbuf[512] = {0};
-		int inlen = label_len;
-		int outlen = sizeof(outbuf);
-		if (!gbk2utf8(inbuf, &inlen, outbuf, &outlen)) {
-			label = outbuf;
-			label_len = sizeof(outbuf) - outlen;
-			if (inlen > 0) {
-				printf("Warning: vfat label converted remain character numbers: %d\n", inlen);
-			}
-		}
-	}
-
 	blkid_set_tag(probe->dev, "LABEL", (const char *) label, label_len);
 	blkid_set_tag(probe->dev, "UUID", serno, sizeof(serno)-1);
 
@@ -728,47 +675,6 @@ static int probe_fat_nomagic(struct blkid_probe *probe,
 		return 1;
 
 	return probe_fat(probe, id, buf);
-}
-
-static void unicode16ToUtf8(
-		      char *str, size_t len,
-		      const uint8_t *buf, enum endian endianess,
-		      size_t count)
-{
-	unsigned i, j;
-	unsigned c;
-
-	j = 0;
-	for (i = 0; i + 2 <= count; i += 2) {
-		if (endianess == LE)
-			c = (buf[i+1] << 8) | buf[i];
-		else
-			c = (buf[i] << 8) | buf[i+1];
-		if (c == 0)
-			break;
-		if (j+1 >= len)
-			break;
-		if (c < 0x80) {
-			/* 0xxxxxxx */
-		} else {
-			uint8_t topbits = 0xc0;
-			if (j+2 >= len)
-				break;
-			if (c < 0x800) {
-				/* 110yyyxx 10xxxxxx */
-			} else {
-				if (j+3 >= len)
-					break;
-				/* 1110yyyy 10yyyyxx 10xxxxxx */
-				str[j++] = (uint8_t) (0xe0 | (c >> 12));
-				topbits = 0x80;
-			}
-			str[j++] = (uint8_t) (topbits | ((c >> 6) & 0x3f));
-			c = 0x80 | (c & 0x3f);
-		}
-		str[j++] = (uint8_t) c;
-	}
-	str[j] = '\0';
 }
 
 static int probe_ntfs(struct blkid_probe *probe,
@@ -860,7 +766,7 @@ static int probe_ntfs(struct blkid_probe *probe,
 		if (attr_type == MFT_RECORD_ATTR_VOLUME_NAME) {
 			if (val_len > sizeof(label_str))
 				val_len = sizeof(label_str)-1;
-#if 0
+
 			for (i=0, cp=label_str; i < val_len; i+=2,cp++) {
 				val = ((__u8 *) attr) + val_off + i;
 				*cp = val[0];
@@ -868,14 +774,6 @@ static int probe_ntfs(struct blkid_probe *probe,
 					*cp = '?';
 			}
 			*cp = 0;
-#endif
-			char label_buf[sizeof(label_str)*2] = {0};
-			for (i = 0; i < val_len; i += 2) {
-				val = ((__u8 *) attr) + val_off + i;
-				label_buf[i] = val[0];
-				label_buf[i+1] = val[1];
-			}
-			unicode16ToUtf8(label_str, sizeof(label_str), label_buf, 0, val_len);
 		}
 	}
 
@@ -1490,14 +1388,14 @@ static int probe_btrfs(struct blkid_probe *probe,
 }
 
 static int probe_f2fs(struct blkid_probe *probe,
-		struct blkid_magic *id,
-		unsigned char *buf)
+            struct blkid_magic *id,
+            unsigned char *buf)
 {
-	struct f2fs_super_block *bs;
+    struct f2fs_super_block *bs;
 
-	bs = (struct f2fs_super_block *)buf;
-	set_uuid(probe->dev, bs->uuid, 0);
-	return 0;
+    bs = (struct f2fs_super_block *)buf;
+    set_uuid(probe->dev, bs->uuid, 0);
+    return 0;
 }
 
 /*
@@ -1603,68 +1501,6 @@ static struct blkid_magic type_array[] = {
   {   NULL,	 0,	 0,  0, NULL,			NULL }
 };
 
-int get_label_uuid(int fd, char **label, char **uuid, char **type)
-{
-	int rv = 1;
-	uint64_t size;
-	struct volume_id *vid;
-	/* fd is owned by vid now */
-	vid = volume_id_open_node(fd);
-	if (ioctl(/*vid->*/fd, BLKGETSIZE64, &size) != 0)
-		size = 0;
-	if (volume_id_probe_all(vid, /*0,*/ size) != 0)
-		goto ret;
-	if (vid->label[0] != '\0' || vid->uuid[0] != '\0'
-	    || vid->type[0] != '\0') {
-	        *label = xstrndup(vid->label, sizeof(vid->label));
-	        *uuid  = xstrndup(vid->uuid, sizeof(vid->uuid));
-	        *type  = xstrndup(vid->type, sizeof(vid->type));
-	        rv = 0;
-	}
- ret:
-	/* also closes fd */
-	free_volume_id(vid);
-	return rv;
-}
-
-int is_valid(char * str)
-{
-	if (!NoDebug)
-		fprintf(stderr, "probe, len:%d\n", strlen(str));
-	if (NULL == str)
-		return 0;
-	if (!strlen(str))
-		return 0;
-	return 1;
-}
-
-int probe_other_fs(blkid_dev dev, char ** type)
-{
-	static char *uuid = NULL; /* for compiler */
-	static char *label = NULL;
-	int fd;
-
-	fd = open(dev->bid_name, O_RDONLY);
-	if (fd < 0)
-		return 0;
-
-	/* get_label_uuid() closes fd in all cases (success & failure) */
-	if (get_label_uuid(fd, &label, &uuid, type) == 0) {
-		if (!is_valid(*type)) {
-			return 0;
-		}
-		if (!NoDebug)
-			fprintf(stderr, "probe, device:%s, label:%s, uuid:%s, type:%s\n", dev->bid_name, label, uuid, *type);
-		blkid_set_tag(dev, "UUID", uuid, 0);
-		blkid_set_tag(dev, "LABEL", label, 0);
-		return 1;
-	} else {
-		* type = NULL;
-	}
-	return 0;
-}
-
-
 /*
  * Verify that the data in dev is consistent with what is on the actual
  * block device (using the devname field only).  Normally this will be
@@ -1768,15 +1604,6 @@ try_again:
 		if ((id->bim_probe == NULL) ||
 		    (id->bim_probe(&probe, id, buf) == 0)) {
 			type = id->bim_type;
-			goto found_type;
-		}
-	}
-	if (!NoDebug)
-		fprintf(stderr, "probe, now out of for, bim_type:%s, bid_type:%s\n", id->bim_type, dev->bid_type);
-	char * tmp_type = NULL;
-	if (!id->bim_type) {
-		if (probe_other_fs(dev, &tmp_type)) {
-			type = tmp_type;
 			goto found_type;
 		}
 	}

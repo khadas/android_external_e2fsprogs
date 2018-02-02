@@ -137,8 +137,7 @@ tune2fs_static_libraries := \
 	libext2_quota \
 	libext2_uuid_static \
 	libext2_e2p \
-	libext2fs \
-	libiconv
+	libext2fs
 
 tune2fs_system_static_libraries := libc
 
