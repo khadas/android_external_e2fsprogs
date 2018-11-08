@@ -237,7 +237,7 @@ cc_binary {
     srcs: ["blkid.c"],
     shared_libs: [
         "libext2fs",
-        "libext2_blkid",
+        "libext2_blkid_shared",
         "libext2_com_err",
         "libext2_e2p",
     ],
