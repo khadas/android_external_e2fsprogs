@@ -50,8 +50,11 @@ cc_library {
             enabled: true
         },
         android: {
+            local_include_dirs: [
+                "libiconv/include/iconv.h",
+            ],
             shared_libs: [
-                "iconv-1.16"
+                "libiconv-1.16"
             ],
             cflags: [
                 "-DUSING_ICONV",

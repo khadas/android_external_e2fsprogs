@@ -3,7 +3,7 @@
 //libiconv.so
 // ANDROIDMK TRANSLATION WARNING: No 'include $(CLEAR_VARS)' detected before first assignment; clearing vars now
 cc_library {
-    name: "iconv-1.16",
+    name: "libiconv-1.16",
     ramdisk_available: true,
     vendor_ramdisk_available: true,
     recovery_available: true,
