@@ -4,6 +4,9 @@
 /* Define to 1 if the package shall run at any location in the file system. */
 /* #undef ENABLE_RELOCATABLE */
 
+/* Define to 1 if you have the `copy_file_range' function. */
+/* #undef HAVE_COPY_FILE_RANGE */
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
 
@@ -11,7 +14,10 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
-#define HAVE_LANGINFO_CODESET 0
+#define HAVE_LANGINFO_CODESET 1
+
+/* Define to 1 if you have the <mach-o/dyld.h> header file. */
+/* #undef HAVE_MACH_O_DYLD_H */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -52,6 +58,9 @@
 
 /* Define to 1 if O_NOFOLLOW works. */
 #define HAVE_WORKING_O_NOFOLLOW 1
+
+/* Define to 1 if you have the `_NSGetExecutablePath' function. */
+/* #undef HAVE__NSGETEXECUTABLEPATH */
 
 /* Define to the value of ${prefix}, as a string. */
 #define INSTALLPREFIX "/usr/local"

@@ -266,7 +266,7 @@ static void print_tags(blkid_dev dev, char *show[], int numtag, int output)
 			}
 			fputs(type, stdout);
 			fputs("=\"", stdout);
-            if(strncmp(type, "LABEL", 4) == 0 ){
+            if(strcmp(type, "LABEL") == 0 ){
                 fputs(value, stdout);
             }else {
                 safe_print(value, -1);
