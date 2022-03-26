@@ -74,9 +74,6 @@ extern "C" {
 
 /* Allocates descriptor for code conversion from encoding ‘fromcode’ to
    encoding ‘tocode’. */
-#ifndef LIBICONV_PLUG
-#define iconv_open libiconv_open
-#endif
 extern LIBICONV_DLL_EXPORTED iconv_t iconv_open (const char* tocode, const char* fromcode);
 
 /* Converts, using conversion descriptor ‘cd’, at most ‘*inbytesleft’ bytes
@@ -84,15 +81,9 @@ extern LIBICONV_DLL_EXPORTED iconv_t iconv_open (const char* tocode, const char*
    ‘*outbuf’.
    Decrements ‘*inbytesleft’ and increments ‘*inbuf’ by the same amount.
    Decrements ‘*outbytesleft’ and increments ‘*outbuf’ by the same amount. */
-#ifndef LIBICONV_PLUG
-#define iconv libiconv
-#endif
 extern LIBICONV_DLL_EXPORTED size_t iconv (iconv_t cd,  char* * inbuf, size_t *inbytesleft, char* * outbuf, size_t *outbytesleft);
 
 /* Frees resources allocated for conversion descriptor ‘cd’. */
-#ifndef LIBICONV_PLUG
-#define iconv_close libiconv_close
-#endif
 extern LIBICONV_DLL_EXPORTED int iconv_close (iconv_t cd);
 
 
