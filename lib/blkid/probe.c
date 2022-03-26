@@ -521,35 +521,17 @@ int gbk2utf8(char *inbuf, size_t inlen, char *outbuf)
     char **pin = &inbuf;
     char **pout = &outbuf;
     size_t dlen= 32 * 4;
-    int *p;
-    iconv_t (*func_iconv_open)(char*, char*);
-    size_t (*func_iconv)(iconv_t, char* *, size_t *, char* *, size_t *);
-    int (*func_iconv_close)(iconv_t);
-    p = dlopen("libiconv-1.16.so", RTLD_NOW);
-    if (p == NULL) {
-        printf("dlopen error!!\n");
-        return -1;
-    } else {
-        printf("dlopen success!!\n");
-    }
-    func_iconv_open = dlsym(p, "libiconv_open");
-    func_iconv = dlsym(p, "libiconv");
-    func_iconv_close = dlsym(p, "libiconv_close");
-    if (func_iconv_open == NULL || func_iconv == NULL || func_iconv_close == NULL) {
-        printf("dlsym error!!!");
+    size_t ret = -1;
+    iconv_t cd = iconv_open("UTF-8","GB2312");
+    if (cd==NULL){
+        printf("iconv open error!!");
         return -1;
     }
-    iconv_t cd = (*func_iconv_open)("UTF-8", "GB2312");
-    if (cd == NULL || cd == 0) {
-        printf("cd == NULL");
-        return -1;
-    }
-    printf("iconv_1.16 begin inbuf = %s, inlen = %zu, outbuf = %s, dlen = %zu\n", inbuf, inlen, outbuf, dlen);
-    size_t ret = (*func_iconv)(cd, pin, &inlen, pout, &dlen);
-    printf("iconv_1.16 end ret = %zu, inbuf = %s, inlen = %zu, outbuf = %s, dlen = %zu\n", ret, inbuf, inlen, outbuf, dlen);
-    (*iconv_close)(cd);
-    dlclose(p);
-    return ret;
+    printf("iconv begin inbuf = %s, inlen = %zu, outbuf = %s, dlen = %zu\n", inbuf, inlen, outbuf, dlen);
+    ret = iconv(cd, pin, &inlen, pout, &dlen);
+    printf("iconv end ret = %zu, inbuf = %s, inlen = %zu, outbuf = %s, dlen = %zu\n", ret, inbuf, inlen, outbuf, dlen);
+    iconv_close(cd);
+    return 0;
 }
 #endif
 

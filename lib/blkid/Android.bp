@@ -52,7 +52,7 @@ cc_library {
             local_include_dirs: [
                 "libiconv/include/iconv.h",
             ],
-            shared_libs: [
+            static_libs: [
                 "libiconv-1.16"
             ],
             cflags: [
