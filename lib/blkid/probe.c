@@ -648,14 +648,16 @@ static int probe_fat(struct blkid_probe *probe,
 	if (vol_label && memcmp(vol_label, no_name, 11)) {
 		if ((label_len = figure_label_len(vol_label, 11))) {
 #ifdef USING_ICONV
-            char tmp[129];
-            memcpy(tmp, vol_label, label_len);
-            int ret = gbk2utf8(tmp, label_len, (char *)vol_label);
-            if (ret == 0) {
-                label_len = strlen(vol_label);
-            }
+                    char tmp[129];
+                    memset((void*)tmp, 0, 129);
+                    printf("fat32 before gbk2utf8 vol_label=(%s), tmp=(%s), label_len=%d\n", vol_label, tmp, label_len);
+                    int ret = gbk2utf8((char *)vol_label, label_len, tmp);
+                    label_len = strlen(tmp);
+                    printf("fat32 end gbk2utf8 vol_label=(%s), tmp=(%s), label_len=%d, ret=%d\n", vol_label, tmp, label_len, ret);
+                    label = tmp;
+#else
+                    label = vol_label;
 #endif
-			label = vol_label;
 		}
 	}
 
